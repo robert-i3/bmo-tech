@@ -1,0 +1,8 @@
+Ensure Pandas and Flask are installed, and that all packages are up to date.
+Launch the server:
+	cd into the repo directory, then run the following:
+		export FLASK_APP=rest_server.py
+		flask run -h localhost -p 5000
+
+Open client.html with your favourite web browser! It's not a pretty UI, but the spec said not to spend time on that.
+Select a valid date range, then hit "submit", the fields will be filled out with the desired information after a few seconds.

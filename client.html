@@ -1,0 +1,118 @@
+<html>
+    <head>
+        <title>USD/CAD and CORRA</title>
+    </head>
+
+    <div>
+        <div>
+            <label for="fromdate">From Date:</label>
+            <input type="date" id="fromdate" name="fromdate">
+        </div>
+        <div>
+            <label for="todate">To Date:</label>
+            <input type="date" id="todate" name="todate">
+        </div>
+        <button id="submit" name="submit" onclick="submit()">Submit</button>
+        <label id="error"></label>
+    </div>
+
+    <div>
+        <label id="datelabel"></label>
+        <br />
+        <div>
+            <label for="min-fx">Min USD/CAD:</label>
+            <label id="min-fx" name="min-fx"></label>
+        </div>
+        <div>
+            <label for="max-fx">Max USD/CAD:</label>
+            <label id="max-fx" name="max-fx"></label>
+        </div>
+        <div>
+            <label for="mean-fx">Mean USD/CAD:</label>
+            <label id="mean-fx" name="mean-fx"></label>
+        </div>
+        <br />
+        <div>
+            <label for="min-corra">Min CORRA:</label>
+            <label id="min-corra" name="min-corra"></label>
+        </div>
+        <div>
+            <label for="max-corra">Max CORRA:</label>
+            <label id="max-corra" name="max-corra"></label>
+        </div>
+        <div>
+            <label for="mean-corra">Mean CORRA:</label>
+            <label id="mean-corra" name="mean-corra"></label>
+        </div>
+        <br />
+        <div>
+            <label for="pearson-coeff">Pearson Coefficient:</label>
+            <label id="pearson-coeff" name="pearson-coeff"></label>
+        </div>
+    </div>
+
+    <script>
+        function dateToString(adate) {
+            //accounts for timezones, as toISOString first converts to UTC time
+            return new Date(adate.getTime() + adate.getTimezoneOffset() * 60 * 1000).toISOString().split('T')[0]
+        }
+
+        function submit() {
+            var fromDateField = document.getElementById("fromdate")
+            var toDateField = document.getElementById("todate")
+            var errorLabel = document.getElementById("error")
+
+            var fromDate = new Date(fromDateField.value)
+            var toDate = new Date(toDateField.value)            
+
+            if (fromDate > toDate) {
+                errorLabel.innerHTML = "From Date cannot be after To Date"
+            } else {                                
+                var url = "http://localhost:5000/fx-corra-stats?fromdate=" + dateToString(fromDate) + "&todate=" + dateToString(toDate)                
+                var submitButton = document.getElementById("submit")
+                submitButton.disabled = true
+                fetch(url).then(response => {
+                    if (response.ok) {
+                        return response.json()
+                    } else {
+                        errorLabel.innerHTML = "Request error, please try again"
+                        submitButton.disabled = false
+                    }
+                }).then(data => {
+                    if (data.status == 0) {
+                        var datelabel = document.getElementById("datelabel")
+                        
+                        var minfxLabel = document.getElementById("min-fx")
+                        var maxfxLabel = document.getElementById("max-fx")
+                        var meanfxLabel = document.getElementById("mean-fx")
+
+                        var mincorraLabel = document.getElementById("min-corra")
+                        var maxcorraLabel = document.getElementById("max-corra")
+                        var meancorraLabel = document.getElementById("mean-corra")
+
+                        var pearsoncoeffLabel = document.getElementById("pearson-coeff")
+
+                        datelabel.innerHTML = "Data for dates: " + fromDate.toLocaleDateString() + " to " + toDate.toLocaleDateString()
+
+                        minfxLabel.innerHTML = data.min_fx_rate.toFixed(4)
+                        maxfxLabel.innerHTML = data.max_fx_rate.toFixed(4)
+                        meanfxLabel.innerHTML = data.mean_fx_rate.toFixed(4)
+
+                        mincorraLabel.innerHTML = data.min_corra.toFixed(4)
+                        maxcorraLabel.innerHTML = data.max_corra.toFixed(4)
+                        meancorraLabel.innerHTML = data.mean_corra.toFixed(4)
+
+                        pearsoncoeffLabel.innerHTML = data.pearson_coeff.toFixed(4)
+                        submitButton.disabled = false
+                    } else {
+                        errorLabel.innerHTML = "Unable to complete request. Please check that you have chosen a valid date range and try again"
+                    }
+                }).catch(error => {
+                    console.log(error)
+                    errorLabel.innerHTML = "Error when attempting to fetch data"                    
+                    submitButton.disabled = false
+                })
+            }
+        }
+    </script>
+</html>
